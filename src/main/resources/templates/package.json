@@ -1,0 +1,15 @@
+{
+  "name": "templates",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@angular/core": "4.3.6",
+    "@stomp/stompjs": "^3.1.1",
+    "@types/sockjs-client": "^1.0.32",
+    "rxjs": "^5.4.3",
+    "typescript": "2.4.1",
+    "zone.js": "^0.8.17"
+  }
+}
