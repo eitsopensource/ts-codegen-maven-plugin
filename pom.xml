@@ -37,6 +37,24 @@
         </resources>
     </build>
 
+    <repositories>
+        <repository>
+            <id>eits-repository-release</id>
+            <url>http://maven.eits.com.br/content/repositories/releases</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>eits-repository-release</id>
+            <url>http://maven.eits.com.br/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>eits-repository-snapshot</id>
+            <url>http://maven.eits.com.br/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
         <!-- Maven -->
         <dependency>

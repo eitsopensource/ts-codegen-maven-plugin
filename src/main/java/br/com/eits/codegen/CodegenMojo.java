@@ -8,8 +8,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,7 +35,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
@@ -207,7 +206,7 @@ public class CodegenMojo extends AbstractMojo
 						.map( method ->
 						{
 							String fqReturnType = Collection.class.isAssignableFrom( method.getReturnType() ) || method.getReturnType().getCanonicalName().equals( "org.springframework.data.domain.Page" ) ?
-									((Class<?>) ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]).getCanonicalName() + "[]" :
+									((Class<?>) ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]).getCanonicalName() :
 									method.getReturnType().getCanonicalName();
 							return method.getName() + ": \'" + fqReturnType + "\'";
 						} )

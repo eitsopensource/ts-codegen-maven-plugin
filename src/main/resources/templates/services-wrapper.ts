@@ -29,47 +29,53 @@ export let BROKER_CONFIGURATION = new InjectionToken<BrokerConfiguration>('broke
 /////////////////
 /////////////////
 
-type EntityEvent = 'PERSISTED' | 'UPDATED' | 'DELETED';
-
-interface EngagedRealTimeMethods {
-    [serviceAndMethodName: string]: EngagedMethodData
-}
+type EngagedRealTimeMethods  = EngagedMethodData[];
 
 interface EngagedMethodData {
+    combinedName: string,
     args: any[],
     observable: Observable<any>,
     observer: Observer<any>
+}
+
+interface RealTimeMethodsByEntity {
+    [entityName: string]: string[]
 }
 
 
 let stompClient: Stomp.Client;
 
 const serviceReturnTypes: ServiceReturnTypes = {};
-const engagedRealTimeMethods: EngagedRealTimeMethods = {};
+const realTimeMethodsByEntity: RealTimeMethodsByEntity = {};
+const engagedRealTimeMethods: EngagedRealTimeMethods = [];
 
 export function registerMethodTypes(serviceName: string, returnTypes: MethodReturnTypes) {
     serviceReturnTypes[serviceName] = returnTypes;
+    Object.keys(returnTypes).forEach(methodName => {
+        const entityName = returnTypes[methodName];
+        if (!realTimeMethodsByEntity[entityName]) {
+            realTimeMethodsByEntity[entityName] = [];
+        }
+        realTimeMethodsByEntity[entityName].push(serviceName + '.' + methodName);
+    });
 }
 
 export function dwrWrapper(configuration: BrokerConfiguration, serviceName: string, methodName: string, ...args: any[]): Observable<any> {
     if (configuration.realTime) {
         const combinedName = serviceName + '.' + methodName;
-        if(!engagedRealTimeMethods[combinedName]) {
-            const observable = Observable.create((observer: Observer<any>) => {
-                engagedRealTimeMethods[combinedName] = {
-                    args,
-                    observer,
-                    observable
-                };
-                lazyInitStompConnection(configuration).then(() => callEngagedMethod(configuration, serviceName, methodName, args, observer));
-                return () => {
-                    delete engagedRealTimeMethods[combinedName];
-                }
+        const observable = Observable.create((observer: Observer<any>) => {
+            engagedRealTimeMethods.push({
+                combinedName,
+                args,
+                observer,
+                observable
             });
-            return observable;
-        }
-        callEngagedMethod(configuration, serviceName, methodName, args, engagedRealTimeMethods[combinedName].observer);
-        return engagedRealTimeMethods[combinedName].observable;
+            lazyInitStompConnection(configuration).then(() => callEngagedMethod(configuration, serviceName, methodName, args, observer));
+            return () => {
+                delete engagedRealTimeMethods[combinedName];
+            }
+        });
+        return observable;
     } else {
         return Observable.create((observer: Observer<any>) => {
             loadDwrIfNeeded(configuration).then(() => {
@@ -131,16 +137,14 @@ function lazyInitStompConnection(configuration: BrokerConfiguration): Promise<vo
         } else {
             stompClient = Stomp.over(new SockJS(configuration.stompPath) as any);
             stompClient.connect({}, () => {
-                stompClient.subscribe('/topic/persisted', message => handleStompMessage(configuration, 'PERSISTED', message));
-                stompClient.subscribe('/topic/updated', message => handleStompMessage(configuration, 'UPDATED', message));
-                stompClient.subscribe('/topic/deleted', message => handleStompMessage(configuration, 'DELETED', message));
+                stompClient.subscribe('/topic/entities', message => handleStompMessage(configuration, message));
                 resolve();
             }, () => setTimeout(() => lazyInitStompConnection(configuration), 5000));
         }
     });
 }
 
-function handleStompMessage(configuration: BrokerConfiguration, event: EntityEvent, message: Stomp.Message) {
+function handleStompMessage(configuration: BrokerConfiguration, message: Stomp.Message) {
     const receivedEntity = JSON.parse(message.body, (key, value) => {
         const dateTimeRegex = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/;
         if (typeof value === 'string' && dateTimeRegex.exec(value)) {
@@ -150,17 +154,13 @@ function handleStompMessage(configuration: BrokerConfiguration, event: EntityEve
     });
     const fullType: string = receivedEntity ? receivedEntity['@type'] : null;
 
-    Object.keys(serviceReturnTypes).forEach(service => {
-        Object.keys(serviceReturnTypes[service]).forEach(method => {
-            const data = engagedRealTimeMethods[service + '.' + method];
-            if(data) {
-                if (serviceReturnTypes[service][method] === fullType) {
-                    callEngagedMethod(configuration, service, method, data.args, data.observer);
-                } else if (serviceReturnTypes[service][method] === fullType + '[]') {
-                    callEngagedMethod(configuration, service, method, data.args, data.observer);
-                }
-            }
-        });
+    realTimeMethodsByEntity[fullType].forEach(combinedName => {
+        const [service, method] = combinedName.split('.');
+        engagedRealTimeMethods.filter(data => data.combinedName === service + '.' + method)
+            .forEach(data => {
+                const {args, observer} = data;
+                callEngagedMethod(configuration, service, method, args, observer);
+            });
     });
 }
 
