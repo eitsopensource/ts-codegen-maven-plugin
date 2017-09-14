@@ -145,14 +145,7 @@ function lazyInitStompConnection(configuration: BrokerConfiguration): Promise<vo
 }
 
 function handleStompMessage(configuration: BrokerConfiguration, message: Stomp.Message) {
-    const receivedEntity = JSON.parse(message.body, (key, value) => {
-        const dateTimeRegex = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/;
-        if (typeof value === 'string' && dateTimeRegex.exec(value)) {
-            return new Date(value);
-        }
-        return value;
-    });
-    const fullType: string = receivedEntity ? receivedEntity['@type'] : null;
+    const fullType: string = message.body;
 
     realTimeMethodsByEntity[fullType].forEach(combinedName => {
         const [service, method] = combinedName.split('.');
