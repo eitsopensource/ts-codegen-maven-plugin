@@ -62,11 +62,25 @@ public class CodegenMojo extends AbstractMojo
 	@org.apache.maven.plugins.annotations.Parameter(defaultValue = "src/main/ts/src/generated", property = "moduleOutputDirectory", required = false)
 	private File moduleOutputDirectory;
 
+	@org.apache.maven.plugins.annotations.Parameter(property = "skip.generator", defaultValue = "${skip.generator}")
+	private boolean skip;
+
 	public void execute() throws MojoExecutionException, MojoFailureException
 	{
+		if ( skip )
+		{
+			getLog().info( "Skipping." );
+			return;
+		}
 		try
 		{
-			assert moduleOutputDirectory.exists() || moduleOutputDirectory.mkdirs();
+			if ( !moduleOutputDirectory.exists() )
+			{
+				if ( !moduleOutputDirectory.mkdirs() )
+				{
+					throw new MojoExecutionException( "Não foi possível criar a pasta de código gerado: " + moduleOutputDirectory.getPath() );
+				}
+			}
 			ArrayList<URL> urls = new ArrayList<>( Collections.singleton( new File( project.getBasedir(), "target/classes" ).toURI().toURL() ) );
 			urls.addAll( project.getCompileClasspathElements().stream().map( spec -> {
 				try
