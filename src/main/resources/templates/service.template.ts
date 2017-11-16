@@ -6,4 +6,3 @@ export class @CLASS@ {
     @METHODS@
 }
 
-registerMethodTypes('@INSTANCE@', @RETURN_TYPES@);
