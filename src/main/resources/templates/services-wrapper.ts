@@ -2,14 +2,6 @@ import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
 
-export interface MethodReturnTypes {
-    [methodName: string]: string
-}
-
-export interface ServiceReturnTypes {
-    [serviceName: string]: MethodReturnTypes
-}
-
 /**
  * path é o caminho SEM BARRA AO FINAL para o broker. Por padrão é simplesmente 'broker'
  */
