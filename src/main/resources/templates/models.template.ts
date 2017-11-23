@@ -11,11 +11,13 @@ export interface SortOrder {
 export type SortDirection = 'ASC' | 'DESC';
 export type NullHandling = 'NATIVE' | 'NULLS_FIRST' | 'NULLS_LAST';
 
-export interface PageRequest {
+export interface Pageable {
     page: number,
     size: number,
     sort?: Sort
 }
+
+export interface PageRequest extends Pageable {}
 
 export interface Page<T> {
     content: T[],

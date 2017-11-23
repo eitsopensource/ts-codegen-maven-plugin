@@ -120,7 +120,7 @@ public class CodegenMojo extends AbstractMojo
 
 			@SuppressWarnings("unchecked")
 			Class<? extends Annotation> remoteProxyAnnotation = (Class<? extends Annotation>) classLoader.loadClass( "org.directwebremoting.annotations.RemoteProxy" );
-			Set<String> imports = new HashSet<>( Arrays.asList( "Sort", "SortOrder", "SortDirection", "NullHandling", "PageRequest", "Page" ) );
+			Set<String> imports = new HashSet<>( Arrays.asList( "Sort", "SortOrder", "SortDirection", "NullHandling", "PageRequest", "Page", "Pageable" ) );
 			imports.addAll( entityData.stream().map( map -> map.containsKey( "ENUM" ) ? map.get( "ENUM" ) : map.get( "ENTITY" ) ).map( type -> type.split( " " )[0] ).collect( toList() ) );
 			List<Map<String, String>> serviceData = reflections.getTypesAnnotatedWith( remoteProxyAnnotation )
 					.stream().map( this::renderServiceData ).collect( toList() );
