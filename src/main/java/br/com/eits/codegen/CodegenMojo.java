@@ -325,7 +325,7 @@ public class CodegenMojo extends AbstractMojo
 	private Map<String, String> extractEnumData( Class<? extends Enum> entityClass, Class<? extends Annotation> dwrAnnotation, ClassLoader classLoader )
 	{
 		String[] values = Arrays.stream( entityClass.getEnumConstants() )
-				.map( val -> "'" + val + "'" )
+				.map( val -> "'" + val.name() + "'" )
 				.toArray( String[]::new );
 		HashMap<String, String> map = new HashMap<>();
 		map.put( "ENUM", entityClass.getSimpleName() );
