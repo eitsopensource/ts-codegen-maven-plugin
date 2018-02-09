@@ -27,4 +27,11 @@ export interface Page<T> {
     pageable?: PageRequest
 }
 
+export interface IntlString {
+    value: string;
+    values: {
+        [key: string]: string;
+    };
+}
+
 @MODELS@

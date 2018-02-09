@@ -18,6 +18,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +48,7 @@ import org.reflections.util.ConfigurationBuilder;
 /**
  *
  */
-@Mojo(name = "generate-ts", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+@Mojo(name = "generate-ts", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES, threadSafe = true)
 public class CodegenMojo extends AbstractMojo
 {
 	/**
@@ -65,6 +66,7 @@ public class CodegenMojo extends AbstractMojo
 	@org.apache.maven.plugins.annotations.Parameter(property = "skip.generator", defaultValue = "${skip.generator}")
 	private boolean skip;
 
+	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException
 	{
 		if ( skip )
@@ -385,6 +387,10 @@ public class CodegenMojo extends AbstractMojo
 		else if ( Arrays.asList( Calendar.class, LocalDateTime.class, LocalDate.class ).contains( type ) )
 		{
 			return "Date";
+		}
+		else if ( OffsetDateTime.class.equals( type ) )
+		{
+			return "string";
 		}
 		else if ( String.class.isAssignableFrom( type ) )
 		{

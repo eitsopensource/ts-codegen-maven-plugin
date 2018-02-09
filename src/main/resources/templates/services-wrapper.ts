@@ -43,17 +43,33 @@ export function dwrWrapper(configuration: BrokerConfiguration, serviceName: stri
 function loadDwrIfNeeded(configuration: BrokerConfiguration): Promise<void> {
     return new Promise<void>(resolve => {
         if ((window as any).dwr) {
-            resolve();
+            shimDwrThenResolve(resolve);
         } else {
             const path = `${configuration.path}/engine.js`;
             const tag: HTMLScriptElement = document.createElement('script');
             tag.src = path;
             tag.type = 'text/javascript';
-            tag.onload = () => resolve();
-            tag.onerror = () => resolve();
+            tag.onload = () => shimDwrThenResolve(resolve);
+            tag.onerror = () => shimDwrThenResolve(resolve);
             document.body.appendChild(tag);
         }
     });
+}
+
+function shimDwrThenResolve(resolve: Function) {
+    (function(dwr) {
+        const original = dwr.engine.serialize.convert;
+        dwr.engine.serialize.convert = function(batch, directrefmap, otherrefmap, data, name, depth) {
+            if(data != null && typeof data == "object" && Object.prototype.toString.call(data) == "[object Date]") {
+                const offset = data.getTimezoneOffset()*60*1000;
+                const newDate = new Date(data.getTime() - offset);
+                original(batch, directrefmap, otherrefmap, newDate, name, depth);
+            } else {
+                original(batch, directrefmap, otherrefmap, data, name, depth);
+            }
+        }
+    })(window['dwr']);
+    resolve();
 }
 
 function loadServiceIfNeeded(configuration: BrokerConfiguration, name: string): Promise<any> {
