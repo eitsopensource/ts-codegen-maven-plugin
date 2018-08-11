@@ -368,17 +368,17 @@ public class CodegenMojo extends AbstractMojo
 			if ( Collection.class.isAssignableFrom( field.getType() ) )
 			{
 				Class<?> collectionType = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-				return translateJavaTypeToTypescript( collectionType ) + "[]";
+				return translateJavaTypeToTypescript( collectionType, field.getGenericType() ) + "[]";
 			}
 		}
-		return translateJavaTypeToTypescript( field.getType() );
+		return translateJavaTypeToTypescript( field.getType(), field.getGenericType() );
 	}
 
-	private String translateJavaTypeToTypescript( Class<?> type )
+	private String translateJavaTypeToTypescript( Class<?> type, Type genericType )
 	{
 		if ( type.isArray() )
 		{
-			return translateJavaTypeToTypescript( type.getComponentType() );
+			return translateJavaTypeToTypescript( type.getComponentType(), genericType );
 		}
 		else if ( Number.class.isAssignableFrom( type ) || Arrays.asList( "byte", "char", "int", "long", "float", "double" ).contains( type.getName() ) )
 		{
@@ -411,6 +411,23 @@ public class CodegenMojo extends AbstractMojo
 		else if ( Collection.class.isAssignableFrom( type ) )
 		{
 			return "any[]";
+		}
+		else if ( Map.class.isAssignableFrom( type ) )
+		{
+			if ( type.equals( genericType ) )
+			{
+				return "{[key: string]: any}";
+			}
+			else if ( genericType instanceof ParameterizedType )
+			{
+				Type[] types = ((ParameterizedType) genericType).getActualTypeArguments();
+				Type first = types[0];
+				Type second = types[1];
+				if ( first instanceof Class && Number.class.isAssignableFrom( (Class<?>) first ) )
+				{
+					return "{[key: number]: " + translateJavaTypeToTypescript( (Class<?>) (second instanceof ParameterizedType ? ((ParameterizedType) second).getRawType() : second), second ) + "}";
+				}
+			}
 		}
 		return type.getSimpleName();
 	}
