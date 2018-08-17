@@ -4,12 +4,6 @@ import java.util.stream.Collectors.toList
 
 import java.beans.Introspector
 import java.io.File
-import java.lang.reflect.Field
-import java.lang.reflect.Method
-import java.lang.reflect.Modifier
-import java.lang.reflect.Parameter
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 import java.net.MalformedURLException
 import java.net.URL
 import java.net.URLClassLoader
@@ -39,6 +33,7 @@ import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.scanners.TypeAnnotationsScanner
 import org.reflections.util.ConfigurationBuilder
+import java.lang.reflect.*
 
 /**
  *
@@ -171,7 +166,6 @@ class CodegenMojo : AbstractMojo() {
 
         map["CLASS"] = serviceClass.simpleName
         map["METHODS"] = typescriptMethods.stream().reduce("") { m, x -> m + x + "\n" }
-        map["RETURN_TYPES"] = extractRealTimeMethodsFromService(serviceClass)
         map["INSTANCE"] = Introspector.decapitalize(serviceClass.simpleName)
 
         return map
@@ -344,7 +338,7 @@ class CodegenMojo : AbstractMojo() {
                 } else {
                     "any"
                 }
-                val secondType = translateJavaTypeToTypescript((if (second is ParameterizedType) second.rawType else second) as Class<*>, second)
+                val secondType = translateJavaTypeToTypescript((if (second is ParameterizedType) second.rawType else if (second is WildcardType) second.upperBounds[0] else second) as Class<*>, second)
                 return "{[key: $firstType]: $secondType}"
             }
         } else if (Collection::class.java.isAssignableFrom(type)) {
@@ -352,9 +346,11 @@ class CodegenMojo : AbstractMojo() {
                 return "any[]"
             } else if(genericType is ParameterizedType) {
                 val argument = genericType.actualTypeArguments[0]
-                val argumentType = translateJavaTypeToTypescript((if(argument is ParameterizedType) argument.rawType else argument) as Class<*>, argument)
+                val argumentType = translateJavaTypeToTypescript((if(argument is ParameterizedType) argument.rawType else if (argument is WildcardType) argument.upperBounds[0] else argument) as Class<*>, argument)
                 return "$argumentType[]"
             }
+        } else if (type == Object::class.java) {
+            return "any"
         }
         return type.simpleName
     }
