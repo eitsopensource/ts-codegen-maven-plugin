@@ -330,13 +330,8 @@ class CodegenMojo : AbstractMojo() {
                 val second = types[1]
                 val firstType = if(first is Class<*> && Number::class.java.isAssignableFrom(first)) {
                     "number"
-                } else if(first is Class<*> && String::class.java.isAssignableFrom(first)) {
-                    "string"
-                } else if(first is Class<*> && Enum::class.java.isAssignableFrom(first)) {
-                    "string"
-//                    translateJavaTypeToTypescript(first, first)
                 } else {
-                    "any"
+                    "string"
                 }
                 val secondType = translateJavaTypeToTypescript((if (second is ParameterizedType) second.rawType else if (second is WildcardType) second.upperBounds[0] else second) as Class<*>, second)
                 return "{[key: $firstType]: $secondType}"
