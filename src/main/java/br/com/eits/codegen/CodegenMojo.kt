@@ -34,6 +34,7 @@ import org.reflections.scanners.SubTypesScanner
 import org.reflections.scanners.TypeAnnotationsScanner
 import org.reflections.util.ConfigurationBuilder
 import java.lang.reflect.*
+import java.time.LocalTime
 
 /**
  *
@@ -309,7 +310,7 @@ class CodegenMojo : AbstractMojo() {
             return translateJavaTypeToTypescript(type.componentType, genericType)
         } else if (Number::class.java.isAssignableFrom(type) || Arrays.asList("byte", "char", "int", "long", "float", "double").contains(type.name)) {
             return "number"
-        } else if (Arrays.asList<Class<*>>(Calendar::class.java, LocalDateTime::class.java, LocalDate::class.java).contains(type)) {
+        } else if (Arrays.asList<Class<*>>(Calendar::class.java, LocalDateTime::class.java, LocalDate::class.java, LocalTime::class.java, OffsetDateTime::class.java).contains(type)) {
             return "Date"
         } else if (OffsetDateTime::class.java == type) {
             return "string"
